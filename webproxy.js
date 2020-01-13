@@ -6,6 +6,10 @@ var debugging = 0;
 
 var regex_hostport = /^([^:]+)(:([0-9]+))?$/;
 
+var d = new Date();
+
+var log_file = "./logs/log_" + d.getFullYear().toString() + d.getMonth() + 1 + d.getDate().toString() + "_" + d.getHours() + d.getMinutes() + ".txt";
+
 function getHostPortFromString(hostString, defaultPort) {
   var host = hostString;
   var port = defaultPort;
@@ -24,6 +28,9 @@ function getHostPortFromString(hostString, defaultPort) {
 // handle a HTTP proxy request
 function httpUserRequest(userRequest, userResponse) {
   if (debugging) {
+    fs.appendFile(log_file, "\n   > request: " + userRequest.url, (err) => {
+      if (err) throw err;
+    });
     console.log("  > request: %s", userRequest.url);
   }
 
@@ -52,11 +59,17 @@ function httpUserRequest(userRequest, userResponse) {
   };
 
   if (debugging) {
+    fs.appendFile(log_file, "\n   > options: " + JSON.stringify(options, null, 2), (err) => {
+      if (err) throw err;
+    });
     console.log("  > options: %s", JSON.stringify(options, null, 2));
   }
 
   var proxyRequest = http.request(options, function(proxyResponse) {
     if (debugging) {
+      fs.appendFile(log_file, "\n  > request headers: " + JSON.stringify(options["headers"], null, 2), (err) => {
+        if (err) throw err;
+      });
       console.log(
         "  > request headers: %s",
         JSON.stringify(options["headers"], null, 2)
@@ -64,6 +77,9 @@ function httpUserRequest(userRequest, userResponse) {
     }
 
     if (debugging) {
+      fs.appendFile(log_file, "\n   < response " + proxyResponse.statusCode + " headers: " + JSON.stringify(proxyResponse.headers, null, 2), (err) => {
+        if (err) throw err;
+      });
       console.log(
         "  < response %d headers: %s",
         proxyResponse.statusCode,
@@ -75,6 +91,9 @@ function httpUserRequest(userRequest, userResponse) {
 
     proxyResponse.on("data", function(chunk) {
       if (debugging) {
+        fs.appendFile(log_file, "\n  > chunk = " + chunk.length + " bytes", (err) => {
+          if (err) throw err;
+        });
         console.log("  < chunk = %d bytes", chunk.length);
       }
       userResponse.write(chunk);
@@ -82,6 +101,9 @@ function httpUserRequest(userRequest, userResponse) {
 
     proxyResponse.on("end", function() {
       if (debugging) {
+        fs.appendFile(log_file, "\n  < END", (err) => {
+          if (err) throw err;
+        });
         console.log("  < END");
       }
       userResponse.end();
@@ -102,6 +124,9 @@ function httpUserRequest(userRequest, userResponse) {
 
   userRequest.addListener("data", function(chunk) {
     if (debugging) {
+      fs.appendFile(log_file, "\n  > chunk = " + chunk.length + " bytes", (err) => {
+        if (err) throw err;
+      });
       console.log("  > chunk = %d bytes", chunk.length);
     }
     proxyRequest.write(chunk);
@@ -114,8 +139,7 @@ function httpUserRequest(userRequest, userResponse) {
 
 function main() {
   var port = 5555; // default port if none on command line
-  var d = new Date();
-  var log_file = "./logs/log_" + d.getFullYear().toString() + d.getMonth() + 1 + d.getDate().toString() + "_" + d.getHours() + d.getMinutes() + ".txt";
+  
 
   // check for any command line arguments
   for (var argn = 2; argn < process.argv.length; argn++) {
