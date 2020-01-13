@@ -88,12 +88,15 @@ function httpUserRequest(userRequest, userResponse) {
     }
 
     userResponse.writeHead(proxyResponse.statusCode, proxyResponse.headers);
+    proxyResponse.setEncoding('utf8');
+    let proxyRawData = '';
 
     proxyResponse.on("data", function(chunk) {
       if (debugging) {
-        fs.appendFile(log_file, "\n  > chunk = " + chunk.length + " bytes", (err) => {
+        fs.appendFile(log_file, "\n  > chunk = " + chunk.length + " bytes "  + "\n" + chunk, (err) => {
           if (err) throw err;
         });
+        proxyRawData += chunk;
         console.log("  < chunk = %d bytes", chunk.length);
       }
       userResponse.write(chunk);
@@ -105,6 +108,12 @@ function httpUserRequest(userRequest, userResponse) {
           if (err) throw err;
         });
         console.log("  < END");
+      }
+      try {
+        const parsedData = JSON.parse(proxyRawData);
+        console.log(parsedData);
+      } catch (e) {
+        console.error(e.message);
       }
       userResponse.end();
     });
@@ -124,7 +133,7 @@ function httpUserRequest(userRequest, userResponse) {
 
   userRequest.addListener("data", function(chunk) {
     if (debugging) {
-      fs.appendFile(log_file, "\n  > chunk = " + chunk.length + " bytes", (err) => {
+      fs.appendFile(log_file, "\n  > chunk = " + chunk.length + " bytes " + "\n" + chunk, (err) => {
         if (err) throw err;
       });
       console.log("  > chunk = %d bytes", chunk.length);
@@ -204,7 +213,7 @@ function main() {
 
     proxySocket.on("data", function(chunk) {
       if (debugging) {
-        fs.appendFile(log_file, "\n   < data length =  " + chunk.length, (err) => {
+        fs.appendFile(log_file, "\n   < data length =  " + chunk.length + "\n" + chunk, (err) => {
           if (err) throw err;
         });
         console.log("  < data length = %d", chunk.length);
@@ -226,7 +235,7 @@ function main() {
 
     socketRequest.on("data", function(chunk) {
       if (debugging) {
-        fs.appendFile(log_file, "\n  > data length = " + chunk.length, (err) => {
+        fs.appendFile(log_file, "\n  > data length = " + chunk.length + "\n" + chunk, (err) => {
           if (err) throw err;
         });
         console.log("  > data length = %d", chunk.length);
