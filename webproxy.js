@@ -109,12 +109,12 @@ function httpUserRequest(userRequest, userResponse) {
         });
         console.log("  < END");
       }
-      try {
-        const parsedData = JSON.parse(proxyRawData);
-        console.log(parsedData);
-      } catch (e) {
-        console.error(e.message);
-      }
+      // try {
+      //   const parsedData = JSON.parse(proxyRawData);
+      //   console.log(parsedData);
+      // } catch (e) {
+      //   console.error(e.message);
+      // }
       userResponse.end();
     });
   });
@@ -179,6 +179,12 @@ function main() {
     var url = request["url"];
     var httpVersion = request["httpVersion"];
 
+    if (url.includes('service.inke.cn')) {
+      debugging = true;
+    } else {
+      debugging = false;
+    }
+
     var hostport = getHostPortFromString(url, 443);
 
     if (debugging) {
@@ -213,10 +219,10 @@ function main() {
 
     proxySocket.on("data", function(chunk) {
       if (debugging) {
-        fs.appendFile(log_file, "\n   < data length =  " + chunk.length + "\n" + chunk, (err) => {
+        fs.appendFile(log_file, "\n   < proxySocket data length =  " + chunk.length + "\n" + chunk, (err) => {
           if (err) throw err;
         });
-        console.log("  < data length = %d", chunk.length);
+        console.log("  < proxySocket data length = %d", chunk.length);
       }
 
       socketRequest.write(chunk);
@@ -235,10 +241,10 @@ function main() {
 
     socketRequest.on("data", function(chunk) {
       if (debugging) {
-        fs.appendFile(log_file, "\n  > data length = " + chunk.length + "\n" + chunk, (err) => {
+        fs.appendFile(log_file, "\n  > socketRequest data length = " + chunk.length + "\n" + chunk, (err) => {
           if (err) throw err;
         });
-        console.log("  > data length = %d", chunk.length);
+        console.log("  > socketRequest data length = %d", chunk.length);
       }
 
       proxySocket.write(chunk);
